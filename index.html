@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Commute Weather</title>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: #151c2c;
+      --card-inner: #1e293b;
+      --accent: #38bdf8;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #334155;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 440px;
+      background: var(--card-bg);
+      padding: 28px 20px;
+      border-radius: 24px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .lang-select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      outline: none;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    p.subtitle {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .location-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--accent);
+    }
+
+    .btn-geo {
+      background: var(--card-inner);
+      border: 1px solid var(--border);
+      color: var(--accent);
+      padding: 0 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .btn-geo:hover {
+      background: var(--border);
+    }
+
+    .time-inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .custom-select-wrapper {
+      position: relative;
+    }
+
+    select.time-picker {
+      width: 100%;
+      padding: 12px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 0.95rem;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    .custom-select-wrapper::after {
+      content: "▾";
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--accent);
+      pointer-events: none;
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: none;
+      background: var(--accent);
+      color: #041220;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      margin-top: 4px;
+    }
+
+    .btn-primary:hover {
+      background: #7dd3fc;
+    }
+
+    .btn-primary:active {
+      transform: scale(0.98);
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .weather-card {
+      background: var(--card-inner);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 20px 14px;
+      border-radius: 16px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-title {
+      font-size: 0.75rem;
+      color: var(--accent);
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .card-temp {
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin: 8px 0 2px 0;
+      color: var(--text);
+    }
+
+    .card-feels-like {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .card-desc {
+      font-size: 0.85rem;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .card-rain {
+      font-size: 0.8rem;
+      color: #60a5fa;
+      margin-top: 10px;
+      background: rgba(96, 165, 250, 0.1);
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    .speech-bar {
+      margin-top: 16px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .btn-speech {
+      background: var(--card-inner);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 18px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .btn-speech:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .error-message {
+      color: #f87171;
+      text-align: center;
+      font-size: 0.85rem;
+      margin-top: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="top-bar">
+      <span></span>
+      <select id="langSelect" class="lang-select">
+        <option value="en">English</option>
+        <option value="es">Español</option>
+        <option value="fr">Français</option>
+        <option value="de">Deutsch</option>
+        <option value="zh">中文</option>
+        <option value="hi">हिन्दी</option>
+      </select>
+    </div>
+
+    <div class="header">
+      <h1 id="txtTitle">Commute Weather</h1>
+      <p class="subtitle" id="txtSubtitle">Instant morning & evening snapshots</p>
+    </div>
+
+    <div class="input-group">
+      <div>
+        <label class="label" id="lblLocation">Location</label>
+        <div class="location-row">
+          <input type="text" id="cityInput" placeholder="Enter city name..." value="London">
+          <button id="geoBtn" class="btn-geo" title="Use Current Location">📍</button>
+        </div>
+      </div>
+
+      <div class="time-inputs">
+        <div>
+          <label class="label" id="lblMorning">Morning</label>
+          <div class="custom-select-wrapper">
+            <select id="morningTime" class="time-picker"></select>
+          </div>
+        </div>
+        <div>
+          <label class="label" id="lblEvening">Evening</label>
+          <div class="custom-select-wrapper">
+            <select id="eveningTime" class="time-picker"></select>
+          </div>
+        </div>
+      </div>
+
+      <button id="checkBtn" class="btn-primary">Get Weather</button>
+    </div>
+
+    <div id="error" class="error-message"></div>
+
+    <div id="results" style="display: none;">
+      <div class="cards-grid">
+        <div class="weather-card">
+          <div class="card-title" id="cardMorningTitle">Morning</div>
+          <div id="morningTemp" class="card-temp">--°</div>
+          <div id="morningFeels" class="card-feels-like">Feels like --°</div>
+          <div id="morningDesc" class="card-desc">--</div>
+          <div id="morningRain" class="card-rain">🌧️ --%</div>
+        </div>
+
+        <div class="weather-card">
+          <div class="card-title" id="cardEveningTitle">Evening</div>
+          <div id="eveningTemp" class="card-temp">--°</div>
+          <div id="eveningFeels" class="card-feels-like">Feels like --°</div>
+          <div id="eveningDesc" class="card-desc">--</div>
+          <div id="eveningRain" class="card-rain">🌧️ --%</div>
+        </div>
+      </div>
+
+      <div class="speech-bar">
+        <button id="speakBtn" class="btn-speech">🔊 Read Out Loud</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const i18n = {
+      en: {
+        title: "Commute Weather",
+        subtitle: "Instant morning & evening snapshots",
+        location: "Location",
+        morning: "Morning",
+        evening: "Evening",
+        btnGet: "Get Weather",
+        feelsLike: "Feels like",
+        readBtn: "🔊 Read Out Loud",
+        locating: "Locating...",
+        yourLoc: "Your Location",
+        geoDenied: "Location access denied. Type a city instead.",
+        notFound: "City not found. Check spelling!",
+        error: "Unable to fetch weather data. Try again!",
+        codes: { 0: "Clear Sky", 1: "Mainly Clear", 2: "Partly Cloudy", 3: "Overcast", 45: "Foggy", 51: "Light Drizzle", 61: "Slight Rain", 63: "Moderate Rain", 65: "Heavy Rain", 80: "Rain Showers", 95: "Thunderstorm" }
+      },
+      es: {
+        title: "Clima de Trayecto",
+        subtitle: "Resumen instantáneo de mañana y tarde",
+        location: "Ubicación",
+        morning: "Mañana",
+        evening: "Tarde",
+        btnGet: "Obtener Clima",
+        feelsLike: "Sensación",
+        readBtn: "🔊 Leer en voz alta",
+        locating: "Localizando...",
+        yourLoc: "Tu Ubicación",
+        geoDenied: "Acceso a la ubicación denegado. Escribe una ciudad.",
+        notFound: "Ciudad no encontrada. ¡Revisa la ortografía!",
+        error: "No se pudieron obtener datos. ¡Inténtalo de nuevo!",
+        codes: { 0: "Cielo Despejado", 1: "Mayormente Despejado", 2: "Parcialmente Nublado", 3: "Nublado", 45: "Niebla", 51: "Llovizna Ligera", 61: "Lluvia Ligera", 63: "Lluvia Moderada", 65: "Lluvia Intensa", 80: "Chubascos", 95: "Tormenta" }
+      },
+      fr: {
+        title: "Météo Trajet",
+        subtitle: "Aperçu instantané matin et soir",
+        location: "Lieu",
+        morning: "Matin",
+        evening: "Soir",
+        btnGet: "Obtenir la Météo",
+        feelsLike: "Ressenti",
+        readBtn: "🔊 Lire à haute voix",
+        locating: "Localisation...",
+        yourLoc: "Votre Position",
+        geoDenied: "Accès à la position refusé. Saisissez une ville.",
+        notFound: "Ville non trouvée. Vérifiez l'orthographe !",
+        error: "Impossible d'obtenir la météo. Réessayez !",
+        codes: { 0: "Ciel Dégagé", 1: "Plutôt Dégagé", 2: "Partiellement Nuageux", 3: "Couvert", 45: "Brouillard", 51: "Bruine Légère", 61: "Pluie Légère", 63: "Pluie Modérée", 65: "Forte Pluie", 80: "Averses", 95: "Orage" }
+      },
+      de: {
+        title: "Pendler Wetter",
+        subtitle: "Sofortige Morgen- & Abendübersicht",
+        location: "Ort",
+        morning: "Morgen",
+        evening: "Abend",
+        btnGet: "Wetter Abrufen",
+        feelsLike: "Gefühlt",
+        readBtn: "🔊 Vorlesen",
+        locating: "Suche Standort...",
+        yourLoc: "Ihr Standort",
+        geoDenied: "Standortzugriff verweigert. Stadt eingeben.",
+        notFound: "Stadt nicht gefunden. Rechtschreibung prüfen!",
+        error: "Wetterdaten konnten nicht geladen werden.",
+        codes: { 0: "Klarer Himmel", 1: "Überwiegend Klar", 2: "Teilweise Bewölkt", 3: "Bedeckt", 45: "Neblig", 51: "Leichter Sprühregen", 61: "Leichter Regen", 63: "Mäßiger Regen", 65: "Starker Regen", 80: "Regenschauer", 95: "Gewitter" }
+      },
+      zh: {
+        title: "通勤天气",
+        subtitle: "早晚天气即时快照",
+        location: "位置",
+        morning: "早晨",
+        evening: "傍晚",
+        btnGet: "获取天气",
+        feelsLike: "体感温度",
+        readBtn: "🔊 朗读",
+        locating: "定位中...",
+        yourLoc: "您的位置",
+        geoDenied: "定位请求被拒绝。请输入城市名称。",
+        notFound: "未找到城市，请检查拼写！",
+        error: "无法获取天气数据，请重试！",
+        codes: { 0: "晴朗", 1: "大部晴朗", 2: "多云", 3: "阴天", 45: "有雾", 51: "毛毛雨", 61: "小雨", 63: "中雨", 65: "大雨", 80: "阵雨", 95: "雷暴" }
+      },
+      hi: {
+        title: "कम्यूट मौसम",
+        subtitle: "सुबह और शाम का त्वरित मौसम",
+        location: "स्थान",
+        morning: "सुबह",
+        evening: "शाम",
+        btnGet: "मौसम देखें",
+        feelsLike: "महसूस जैसा",
+        readBtn: "🔊 पढ़कर सुनाएं",
+        locating: "खोज रहे हैं...",
+        yourLoc: "आपका स्थान",
+        geoDenied: "स्थान की अनुमति नहीं मिली। शहर दर्ज करें।",
+        notFound: "शहर नहीं मिला। स्पेलिंग जांचें!",
+        error: "मौसम की जानकारी नहीं मिली। पुनः प्रयास करें!",
+        codes: { 0: "साफ़ आसमान", 1: "मुख्यतः साफ़", 2: "आंशिक रूप से बादल", 3: "घने बादल", 45: "कोहरा", 51: "हल्की बूंदें", 61: "हल्की बारिश", 63: "मध्यम बारिश", 65: "भारी बारिश", 80: "तेज़ बौछारें", 95: "तूफान" }
+      }
+    };
+
+    let currentCoords = null;
+    let currentLang = 'en';
+    let lastSummaryText = '';
+
+    function populateTimeSelectors() {
+      const morningSelect = document.getElementById("morningTime");
+      const eveningSelect = document.getElementById("eveningTime");
+      morningSelect.innerHTML = "";
+      eveningSelect.innerHTML = "";
+
+      for (let hour = 0; hour < 24; hour++) {
+        const value = hour.toString().padStart(2, '0');
+        const period = hour >= 12 ? 'PM' : 'AM';
+        const displayHour = hour % 12 === 0 ? 12 : hour % 12;
+        const label = `${displayHour}:00 ${period}`;
+
+        const optM = document.createElement("option");
+        optM.value = value;
+        optM.textContent = label;
+        if (hour === 8) optM.selected = true;
+        morningSelect.appendChild(optM);
+
+        const optE = document.createElement("option");
+        optE.value = value;
+        optE.textContent = label;
+        if (hour === 17) optE.selected = true;
+        eveningSelect.appendChild(optE);
+      }
+    }
+
+    function updateLanguage(lang) {
+      currentLang = lang;
+      const t = i18n[lang];
+
+      document.getElementById("txtTitle").textContent = t.title;
+      document.getElementById("txtSubtitle").textContent = t.subtitle;
+      document.getElementById("lblLocation").textContent = t.location;
+      document.getElementById("lblMorning").textContent = t.morning;
+      document.getElementById("lblEvening").textContent = t.evening;
+      document.getElementById("checkBtn").textContent = t.btnGet;
+      document.getElementById("cardMorningTitle").textContent = t.morning;
+      document.getElementById("cardEveningTitle").textContent = t.evening;
+      document.getElementById("speakBtn").textContent = t.readBtn;
+
+      const cityInput = document.getElementById("cityInput");
+      if (cityInput.value === "Your Location" || Object.values(i18n).some(item => item.yourLoc === cityInput.value)) {
+        cityInput.value = t.yourLoc;
+      }
+    }
+
+    document.getElementById("langSelect").addEventListener("change", (e) => {
+      updateLanguage(e.target.value);
+    });
+
+    // Clear saved GPS coordinates whenever the text input changes manually
+    document.getElementById("cityInput").addEventListener("input", () => {
+      currentCoords = null;
+    });
+
+    // Fetch weather ONLY when "Get Weather" button is clicked
+    document.getElementById("checkBtn").addEventListener("click", () => {
+      const city = document.getElementById("cityInput").value.trim();
+      const t = i18n[currentLang];
+      
+      if (city === t.yourLoc && currentCoords) {
+        fetchWeatherData(currentCoords.latitude, currentCoords.longitude);
+      } else if (city) {
+        getWeatherByCity(city);
+      }
+    });
+
+    document.getElementById("geoBtn").addEventListener("click", useCurrentLocation);
+
+    async function getWeatherByCity(city) {
+      const errorDiv = document.getElementById("error");
+      const t = i18n[currentLang];
+      errorDiv.textContent = "";
+
+      try {
+        const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`);
+        const geoData = await geoRes.json();
+
+        if (!geoData.results || geoData.results.length === 0) {
+          errorDiv.textContent = t.notFound;
+          return;
+        }
+
+        const { latitude, longitude, name } = geoData.results[0];
+        document.getElementById("cityInput").value = name;
+        currentCoords = null;
+        fetchWeatherData(latitude, longitude);
+      } catch (err) {
+        errorDiv.textContent = t.error;
+      }
+    }
+
+    // Only sets current coordinates and fills the input box — does NOT load weather automatically
+    function useCurrentLocation() {
+      const errorDiv = document.getElementById("error");
+      const t = i18n[currentLang];
+      errorDiv.textContent = "";
+
+      if (!navigator.geolocation) {
+        errorDiv.textContent = t.geoDenied;
+        return;
+      }
+
+      document.getElementById("cityInput").value = t.locating;
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          currentCoords = { latitude, longitude };
+          document.getElementById("cityInput").value = t.yourLoc;
+        },
+        () => {
+          errorDiv.textContent = t.geoDenied;
+          document.getElementById("cityInput").value = "";
+        }
+      );
+    }
+
+    async function fetchWeatherData(latitude, longitude) {
+      const morningHour = document.getElementById("morningTime").value;
+      const eveningHour = document.getElementById("eveningTime").value;
+      const errorDiv = document.getElementById("error");
+      const resultsDiv = document.getElementById("results");
+      const t = i18n[currentLang];
+
+      try {
+        const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,apparent_temperature,precipitation_probability,weather_code&temperature_unit=celsius&timezone=auto`;
+        const weatherRes = await fetch(apiUrl);
+        const weatherData = await weatherRes.json();
+
+        const todayStr = new Date().toISOString().split('T')[0];
+        
+        const morningIndex = weatherData.hourly.time.findIndex(time => time.startsWith(`${todayStr}T${morningHour}`));
+        const eveningIndex = weatherData.hourly.time.findIndex(time => time.startsWith(`${todayStr}T${eveningHour}`));
+
+        if (morningIndex === -1 || eveningIndex === -1) {
+          errorDiv.textContent = t.error;
+          return;
+        }
+
+        const mTemp = Math.round(weatherData.hourly.temperature_2m[morningIndex]);
+        const mFeels = Math.round(weatherData.hourly.apparent_temperature[morningIndex]);
+        const mCode = weatherData.hourly.weather_code[morningIndex];
+        const mDesc = t.codes[mCode] || t.codes[3];
+        const mRain = weatherData.hourly.precipitation_probability[morningIndex];
+
+        const eTemp = Math.round(weatherData.hourly.temperature_2m[eveningIndex]);
+        const eFeels = Math.round(weatherData.hourly.apparent_temperature[eveningIndex]);
+        const eCode = weatherData.hourly.weather_code[eveningIndex];
+        const eDesc = t.codes[eCode] || t.codes[3];
+        const eRain = weatherData.hourly.precipitation_probability[eveningIndex];
+
+        document.getElementById("morningTemp").textContent = `${mTemp}°C`;
+        document.getElementById("morningFeels").textContent = `${t.feelsLike} ${mFeels}°C`;
+        document.getElementById("morningDesc").textContent = mDesc;
+        document.getElementById("morningRain").textContent = `🌧️ ${mRain}%`;
+
+        document.getElementById("eveningTemp").textContent = `${eTemp}°C`;
+        document.getElementById("eveningFeels").textContent = `${t.feelsLike} ${eFeels}°C`;
+        document.getElementById("eveningDesc").textContent = eDesc;
+        document.getElementById("eveningRain").textContent = `🌧️ ${eRain}%`;
+
+        resultsDiv.style.display = "block";
+
+        lastSummaryText = `${t.morning}: ${mTemp} degrees, ${mDesc}, ${mRain} percent chance of rain. ${t.evening}: ${eTemp} degrees, ${eDesc}, ${eRain} percent chance of rain.`;
+
+      } catch (err) {
+        errorDiv.textContent = t.error;
+      }
+    }
+
+    document.getElementById("speakBtn").addEventListener("click", () => {
+      if ('speechSynthesis' in window && lastSummaryText) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(lastSummaryText);
+        utterance.lang = currentLang;
+        window.speechSynthesis.speak(utterance);
+      }
+    });
+
+    populateTimeSelectors();
+  </script>
+</body>
+</html>
